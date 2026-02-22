@@ -305,17 +305,28 @@ class Command(BaseCommand):
             )
         self.stdout.write(f"  Created {len(tax_rates)} tax rate records")
 
-        # Exchange Rate History
-        for _ in range(5):
-            ExchangeRateHistory.objects.create(
-                from_currency=self.currencies["USD"],
-                to_currency=self.currencies["DA"],
-                rate=Decimal("135.50") + Decimal(str(random.uniform(-5, 5))),
-                effective_date=timezone.now().date()
-                - timedelta(days=random.randint(1, 90)),
-                source="Banque d'Algérie",
-                notes="Historical exchange rate",
-                created_by=User.objects.get(username="admin"),
+        # Exchange Rate History - use fixed offsets to avoid unique constraint on re-run
+        history_rates = [
+            ("USD", "DA", Decimal("130.25"), 90),
+            ("USD", "DA", Decimal("132.00"), 60),
+            ("USD", "DA", Decimal("133.75"), 30),
+            ("USD", "DA", Decimal("134.50"), 14),
+            ("USD", "DA", Decimal("135.50"), 1),
+            ("CNY", "DA", Decimal("18.10"), 90),
+            ("CNY", "DA", Decimal("18.45"), 30),
+            ("CNY", "DA", Decimal("18.75"), 1),
+        ]
+        for from_code, to_code, rate, days_ago in history_rates:
+            ExchangeRateHistory.objects.get_or_create(
+                from_currency=self.currencies[from_code],
+                to_currency=self.currencies[to_code],
+                effective_date=timezone.now().date() - timedelta(days=days_ago),
+                defaults={
+                    "rate": rate,
+                    "source": "Banque d'Algérie",
+                    "notes": "Historical exchange rate",
+                    "created_by": User.objects.get(username="admin"),
+                },
             )
         self.stdout.write("  Created exchange rate history")
 
@@ -767,17 +778,21 @@ class Command(BaseCommand):
                     total_margin = sum(s.margin_amount for s in sales)
                     total_commission = sum(s.commission_amount for s in sales)
 
-                    CommissionSummary.objects.create(
+                    CommissionSummary.objects.get_or_create(
                         trader=trader,
                         period=period,
-                        sales_count=sales.count(),
-                        total_sales_value=total_sales,
-                        total_margin=total_margin,
-                        base_commission=total_commission,
-                        tier_bonus=Decimal("0"),
-                        total_commission=total_commission,
-                        payout_status="pending" if not period.is_closed else "approved",
-                        created_by=User.objects.get(username="admin"),
+                        defaults={
+                            "sales_count": sales.count(),
+                            "total_sales_value": total_sales,
+                            "total_margin": total_margin,
+                            "base_commission": total_commission,
+                            "tier_bonus": Decimal("0"),
+                            "total_commission": total_commission,
+                            "payout_status": (
+                                "pending" if not period.is_closed else "approved"
+                            ),
+                            "created_by": User.objects.get(username="admin"),
+                        },
                     )
                     self.stdout.write(
                         f"    Commission summary for {trader.username} - {period}"
