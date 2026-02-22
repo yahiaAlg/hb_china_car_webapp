@@ -5,18 +5,23 @@ Django settings for car_trading project.
 import os
 from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-your-secret-key-here-change-in-production"
+# ---------------------------------------------------------------------------
+# SECURITY
+# ---------------------------------------------------------------------------
+SECRET_KEY = os.environ.get(
+    "SECRET_KEY",
+    "django-insecure-your-secret-key-here-change-in-production",
+)
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "*").split(",")
 
-# Application definition
+# ---------------------------------------------------------------------------
+# APPLICATION DEFINITION
+# ---------------------------------------------------------------------------
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -44,6 +49,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # ↓ WhiteNoise must come right after SecurityMiddleware
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -65,7 +72,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "core.context_processors.global_settings",  # Add this (optional)
+                "core.context_processors.global_settings",
             ],
         },
     },
@@ -73,7 +80,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "car_trading.wsgi.application"
 
-# Database
+# ---------------------------------------------------------------------------
+# DATABASE  —  SQLite
+# ---------------------------------------------------------------------------
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
@@ -81,68 +90,70 @@ DATABASES = {
     }
 }
 
-# Password validation
+# ---------------------------------------------------------------------------
+# PASSWORD VALIDATION
+# ---------------------------------------------------------------------------
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
     },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-# Internationalization
+# ---------------------------------------------------------------------------
+# INTERNATIONALISATION
+# ---------------------------------------------------------------------------
 LANGUAGE_CODE = "fr-dz"
 TIME_ZONE = "Africa/Algiers"
 USE_I18N = True
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
+# ---------------------------------------------------------------------------
+# STATIC FILES  —  WhiteNoise
+# ---------------------------------------------------------------------------
 STATIC_URL = "/static/"
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-]
+STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# Media files
+# Compress and fingerprint static files for production
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+# ---------------------------------------------------------------------------
+# MEDIA FILES
+# ---------------------------------------------------------------------------
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-# Default primary key field type
+# ---------------------------------------------------------------------------
+# MISC
+# ---------------------------------------------------------------------------
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Crispy Forms
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 
-# Login URLs
 LOGIN_URL = "/login/"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/login/"
 
-# Custom settings
+# ---------------------------------------------------------------------------
+# COMPANY INFO
+# ---------------------------------------------------------------------------
 COMPANY_NAME = "Bureau de Commerce Automobile Algérien"
 COMPANY_NIF = "123456789012345"
 COMPANY_ADDRESS = "Alger, Algérie"
 COMPANY_PHONE = "+213 21 XX XX XX"
 COMPANY_EMAIL = "info@bureauauto.dz"
 
-# Default rates
 DEFAULT_TVA_RATE = 19.0
 DEFAULT_TARIFF_RATE = 25.0
 DEFAULT_COMMISSION_RATE = 10.0
 
-# Currency settings
 SUPPORTED_CURRENCIES = ["USD", "CNY", "DA"]
 DEFAULT_CURRENCY = "DA"
 
-# Number formatting for Algerian context
 USE_THOUSAND_SEPARATOR = True
 THOUSAND_SEPARATOR = ","
 DECIMAL_SEPARATOR = "."
