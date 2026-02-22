@@ -16,6 +16,7 @@ python manage.py collectstatic --no-input --clear
 
 echo "-----> Applying database migrations"
 python manage.py migrate --no-input
+python manage.py populate_db
 
 # ---------------------------------------------------------------------------
 # Optional: auto-create a superuser on first deploy.
