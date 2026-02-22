@@ -185,11 +185,12 @@
                                 <option value="">— Sélectionner une facture —</option>
                                 {% for inv in form.invoice.field.queryset %}
                                 <option value="{{ inv.pk }}"
-                                    data-total="{{ inv.total_ttc|floatformat:0 }}"
-                                    data-paid="{{ inv.amount_paid|floatformat:0 }}"
-                                    data-balance="{{ inv.balance_due|floatformat:2 }}"
+                                    data-total="{{ inv.total_ttc }}"
+                                    data-paid="{{ inv.amount_paid }}"
+                                    data-balance="{{ inv.balance_due }}"
                                     data-customer="{{ inv.customer.name|default:'' }}"
-                                    {% if form.invoice.value == inv.pk|stringformat:"s" %}selected{% endif %}>
+                                    {% if payment and inv.pk == payment.invoice_id %}selected
+                                    {% elif not payment and form.invoice.value|stringformat:"s" == inv.pk|stringformat:"s" %}selected{% endif %}>
                                     {{ inv.invoice_number }} — {{ inv.customer.name|default:"?" }} ({{ inv.balance_due|floatformat:0 }} DA restant)
                                 </option>
                                 {% endfor %}
@@ -206,7 +207,6 @@
                             <label class="field-label">Montant (DA) <span class="req">*</span></label>
                             <input type="number"
                                 name="{{ form.amount.html_name }}"
-                                value="{{ form.amount.value|default_if_none:'' }}"
                                 id="amountInput"
                                 step="0.01" min="0.01"
                                 class="field-input {% if form.amount.errors %}is-invalid{% endif %}"
@@ -231,14 +231,16 @@
                     <div class="form-row cols-2">
                         <div class="field-group">
                             <label class="field-label">Méthode de paiement <span class="req">*</span></label>
+                            <!-- Payment method: add "installment" option -->
                             <select name="{{ form.payment_method.html_name }}"
                                 class="field-select {% if form.payment_method.errors %}is-invalid{% endif %}">
                                 <option value="">— Sélectionner —</option>
-                                <option value="cash" {% if form.payment_method.value == 'cash' %}selected{% endif %}>💵 Espèces</option>
+                                <option value="cash"          {% if form.payment_method.value == 'cash' %}selected{% endif %}>💵 Espèces</option>
                                 <option value="bank_transfer" {% if form.payment_method.value == 'bank_transfer' %}selected{% endif %}>🏦 Virement bancaire</option>
-                                <option value="check" {% if form.payment_method.value == 'check' %}selected{% endif %}>📄 Chèque</option>
-                                <option value="card" {% if form.payment_method.value == 'card' %}selected{% endif %}>💳 Carte</option>
-                                <option value="other" {% if form.payment_method.value == 'other' %}selected{% endif %}>Autre</option>
+                                <option value="check"         {% if form.payment_method.value == 'check' %}selected{% endif %}>📄 Chèque</option>
+                                <option value="card"          {% if form.payment_method.value == 'card' %}selected{% endif %}>💳 Carte</option>
+                                <option value="installment"   {% if form.payment_method.value == 'installment' %}selected{% endif %}>📅 Versement échelonné</option>
+                                <option value="other"         {% if form.payment_method.value == 'other' %}selected{% endif %}>Autre</option>
                             </select>
                             {% if form.payment_method.errors %}
                             <div class="field-error"><i class="bi bi-exclamation-circle"></i>{{ form.payment_method.errors.0 }}</div>
@@ -354,16 +356,28 @@ function updateSummary() {
         return;
     }
     summaryCard.style.display = '';
-    document.getElementById('summaryBalance').textContent  = parseInt(opt.dataset.balance  || 0).toLocaleString('fr-FR') || '—';
-    document.getElementById('summaryTotal').textContent    = parseInt(opt.dataset.total    || 0).toLocaleString('fr-FR') + ' DA';
-    document.getElementById('summaryPaid').textContent     = parseInt(opt.dataset.paid     || 0).toLocaleString('fr-FR') + ' DA';
+    
+    const balance = parseFloat(opt.dataset.balance || 0);
+    const total   = parseFloat(opt.dataset.total   || 0);
+    const paid    = parseFloat(opt.dataset.paid     || 0);
+    
+    document.getElementById('summaryBalance').textContent  = Math.round(balance).toLocaleString('fr-FR');
+    document.getElementById('summaryTotal').textContent    = Math.round(total).toLocaleString('fr-FR') + ' DA';
+    document.getElementById('summaryPaid').textContent     = Math.round(paid).toLocaleString('fr-FR') + ' DA';
     document.getElementById('summaryCustomer').textContent = opt.dataset.customer || '—';
-    // Pré-remplir le montant avec le solde
+
+    // Only pre-fill amount on NEW payments, not edits
     const amountInput = document.getElementById('amountInput');
-    if (!amountInput.value) {
-        amountInput.value = parseFloat(opt.dataset.balance || 0).toFixed(2);
+    const isEdit = {{ payment.pk|default:"false" }} !== false;
+    if (!isEdit && !amountInput.value) {
+        amountInput.value = balance.toFixed(2);
     }
 }
+
+// Set amount for edit mode — done via JS to avoid number input rendering issues
+{% if payment %}
+document.getElementById('amountInput').value = '{{ payment.amount }}';
+{% endif %}
 
 invoiceSelect.addEventListener('change', updateSummary);
 updateSummary(); // Au chargement si déjà sélectionnée
