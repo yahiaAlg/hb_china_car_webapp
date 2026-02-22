@@ -1,0 +1,466 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block nav_purchases %}active{% endblock %}
+
+{% block page_title %}{{ title }}{% endblock %}
+{% block page_sub_text %}Saisir le prix FOB et les informations fournisseur{% endblock %}
+
+{% block extra_css %}
+/* ── Lien retour ── */
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    transition: color var(--transition);
+    text-decoration: none;
+    min-height: 44px;
+}
+.back-link:hover { color: var(--accent); }
+
+/* ── Disposition du formulaire ── */
+.form-layout {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 20px;
+    align-items: start;
+}
+@media (max-width: 960px) { .form-layout { grid-template-columns: 1fr; } }
+
+/* ── Carte de formulaire ── */
+.form-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.form-card-head {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+.form-card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.form-card-body { padding: 20px; }
+
+/* ── Sections ── */
+.form-section-label {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+    margin-top: 4px;
+}
+
+/* ── Grilles de champs ── */
+.field-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.field-group-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+}
+
+@media (max-width: 640px) {
+    .field-group, .field-group-3 { grid-template-columns: 1fr; }
+}
+
+/* ── Champs ── */
+.field { margin-bottom: 16px; }
+
+.field label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 7px;
+}
+
+.field-required::after {
+    content: ' *';
+    color: var(--accent);
+}
+
+.form-control {
+    width: 100%;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 11px 13px;
+    outline: none;
+    transition: border-color var(--transition), box-shadow var(--transition);
+    appearance: none;
+    min-height: 44px;
+}
+.form-control:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.form-control::placeholder { color: var(--text-muted); }
+textarea.form-control { resize: vertical; min-height: 90px; }
+
+.form-error {
+    font-size: 11.5px;
+    color: #dc2626;
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* ── Aperçu en direct ── */
+.info-box {
+    background: var(--accent-dim);
+    border: 1px solid rgba(217,119,6,.20);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    font-size: 12.5px;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+/* ── Boutons ── */
+.submit-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-top: 8px;
+    flex-wrap: wrap;
+}
+
+.btn-primary-x {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent);
+    color: #fff;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    border-radius: var(--radius-md);
+    padding: 11px 22px;
+    border: none;
+    cursor: pointer;
+    transition: opacity .18s, transform .12s;
+    text-decoration: none;
+    min-height: 44px;
+}
+.btn-primary-x:hover { opacity: .88; }
+.btn-primary-x:active { transform: scale(.99); }
+
+.btn-ghost-x {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    border-radius: var(--radius-md);
+    padding: 11px 20px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all var(--transition);
+    min-height: 44px;
+}
+.btn-ghost-x:hover { background: var(--bg-hover); border-color: var(--border-strong); color: var(--text-primary); }
+
+/* ── Sidebar / Aide ── */
+.hint-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow-sm);
+}
+
+.hint-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.hint-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+.hint-step:last-child { margin-bottom: 0; }
+
+.hint-num {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--accent-dim);
+    color: var(--accent);
+    font-size: 10px;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+/* ── Aperçu du prix ── */
+.price-preview {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow-sm);
+}
+
+.preview-label {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+.preview-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: -.02em;
+}
+
+/* ── Animation ── */
+.fade-in { animation: fadeIn .35s ease both; }
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+{% endblock %}
+
+{% block content %}
+
+<!-- Lien retour -->
+<a href="{% url 'purchases:list' %}" class="back-link fade-in">
+    <i class="bi bi-arrow-left"></i> Retour aux achats
+</a>
+
+<div class="form-layout fade-in">
+
+    <!-- Formulaire principal -->
+    <div>
+        <form method="post" id="purchaseForm">
+            {% csrf_token %}
+
+            <div class="form-card">
+                <div class="form-card-head">
+                    <div class="form-card-title"><i class="bi bi-truck me-2" style="color:#ea580c;"></i>{{ title }}</div>
+                </div>
+                <div class="form-card-body">
+
+                    {% if form.non_field_errors %}
+                    <div style="background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.20);border-radius:var(--radius-md);padding:12px 14px;margin-bottom:18px;font-size:13px;color:#dc2626;">
+                        <i class="bi bi-exclamation-circle me-2"></i>
+                        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Fournisseur & Date -->
+                    <div class="form-section-label">Informations de la commande</div>
+                    <div class="field-group" style="margin-bottom:0;">
+                        <div class="field">
+                            <label class="field-required">Date d'achat</label>
+                            <input type="date" name="purchase_date"
+                                   value="{{ form.purchase_date.value|default:'' }}"
+                                   class="form-control {% if form.purchase_date.errors %}border-danger{% endif %}">
+                            {% for e in form.purchase_date.errors %}
+                            <div class="form-error"><i class="bi bi-exclamation-circle"></i> {{ e }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="field">
+                            <label class="field-required">Fournisseur</label>
+                            <select name="supplier" class="form-control {% if form.supplier.errors %}border-danger{% endif %}" style="cursor:pointer;">
+                                <option value="">— Sélectionner un fournisseur —</option>
+                                {% for sup in form.supplier.field.queryset %}
+                                <option value="{{ sup.pk }}" {% if form.supplier.value|stringformat:"s" == sup.pk|stringformat:"s" %}selected{% endif %}>
+                                    {{ sup.name }} ({{ sup.country }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% for e in form.supplier.errors %}
+                            <div class="form-error"><i class="bi bi-exclamation-circle"></i> {{ e }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div style="height:1px;background:var(--border);margin:20px 0;"></div>
+
+                    <!-- Prix FOB & Devise -->
+                    <div class="form-section-label">Prix FOB &amp; Devise</div>
+                    <div class="field-group-3" style="margin-bottom:0;">
+                        <div class="field">
+                            <label class="field-required">Prix FOB</label>
+                            <input type="number" name="purchase_price_fob" id="fobPrice"
+                                   value="{{ form.purchase_price_fob.value|default:'' }}"
+                                   step="0.01" min="0" placeholder="0,00"
+                                   class="form-control {% if form.purchase_price_fob.errors %}border-danger{% endif %}">
+                            {% for e in form.purchase_price_fob.errors %}
+                            <div class="form-error"><i class="bi bi-exclamation-circle"></i> {{ e }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="field">
+                            <label class="field-required">Devise</label>
+                            <select name="currency" id="currency" class="form-control {% if form.currency.errors %}border-danger{% endif %}" style="cursor:pointer;">
+                                <option value="">— Sélectionner —</option>
+                                {% for cur in form.currency.field.queryset %}
+                                <option value="{{ cur.pk }}" {% if form.currency.value|stringformat:"s" == cur.pk|stringformat:"s" %}selected{% endif %}>
+                                    {{ cur.code }} — {{ cur.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% for e in form.currency.errors %}
+                            <div class="form-error"><i class="bi bi-exclamation-circle"></i> {{ e }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="field">
+                            <label class="field-required">Taux de change → DA</label>
+                            <input type="number" name="exchange_rate_to_da" id="exchangeRate"
+                                   value="{{ form.exchange_rate_to_da.value|default:'' }}"
+                                   step="0.000001" min="0" placeholder="0,000000"
+                                   class="form-control {% if form.exchange_rate_to_da.errors %}border-danger{% endif %}">
+                            {% for e in form.exchange_rate_to_da.errors %}
+                            <div class="form-error"><i class="bi bi-exclamation-circle"></i> {{ e }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Aperçu du prix calculé -->
+                    <div class="info-box" id="calcPreview">
+                        <i class="bi bi-calculator"></i>
+                        Prix calculé en DA :
+                        <strong id="calcValue" style="margin-left:4px;font-size:15px;">0 DA</strong>
+                    </div>
+
+                    <div style="height:1px;background:var(--border);margin:20px 0;"></div>
+
+                    <!-- Notes -->
+                    <div class="form-section-label">Notes</div>
+                    <div class="field" style="margin-bottom:0;">
+                        <label>Remarques <span style="font-size:10px;color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0;">(facultatif)</span></label>
+                        <textarea name="notes" class="form-control" placeholder="Notes ou observations sur cet achat…" rows="3">{{ form.notes.value|default:'' }}</textarea>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="submit-row">
+                <button type="submit" class="btn-primary-x">
+                    <i class="bi bi-check-lg"></i> Enregistrer l'achat
+                </button>
+                <a href="{% url 'purchases:list' %}" class="btn-ghost-x">
+                    Annuler
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Colonne latérale -->
+    <div>
+        <!-- Aperçu du prix -->
+        <div class="price-preview">
+            <div class="preview-label">Prix d'achat calculé</div>
+            <div class="preview-value" id="sidePreview">0 DA</div>
+            <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px;">FOB × Taux de change</div>
+        </div>
+
+        <!-- Guide d'import -->
+        <div class="hint-card">
+            <div class="hint-title"><i class="bi bi-info-circle" style="color:var(--accent);"></i> Flux d'import</div>
+            <div class="hint-step">
+                <div class="hint-num">1</div>
+                <div>Enregistrez le <strong style="color:var(--text-primary);">prix FOB</strong> dans la devise du fournisseur avec le taux de change du jour.</div>
+            </div>
+            <div class="hint-step">
+                <div class="hint-num">2</div>
+                <div>Ajoutez les <strong style="color:var(--text-primary);">coûts de fret &amp; logistique</strong> après enregistrement.</div>
+            </div>
+            <div class="hint-step">
+                <div class="hint-num">3</div>
+                <div>Déposez la <strong style="color:var(--text-primary);">déclaration en douane</strong> une fois le fret enregistré.</div>
+            </div>
+            <div class="hint-step">
+                <div class="hint-num">4</div>
+                <div>Marquez l'envoi comme <strong style="color:var(--text-primary);">dédouané</strong> pour passer les véhicules en stock disponible.</div>
+            </div>
+        </div>
+
+        <!-- Avertissement FOB vs Coût de revient -->
+        <div class="hint-card" style="border-left:3px solid #d97706;">
+            <div class="hint-title"><i class="bi bi-exclamation-triangle" style="color:#d97706;"></i> FOB vs Coût de revient</div>
+            <p style="font-size:12.5px;color:var(--text-secondary);line-height:1.6;margin:0;">
+                Le <strong style="color:var(--text-primary);">prix FOB</strong> couvre uniquement le coût du véhicule au port d'origine.
+                Le <strong style="color:var(--text-primary);">coût de revient</strong> inclut le fret, l'assurance, les droits de douane et la TVA — calculé sur la page de détail.
+            </p>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const fobInput    = document.getElementById('fobPrice');
+const rateInput   = document.getElementById('exchangeRate');
+const calcValue   = document.getElementById('calcValue');
+const sidePreview = document.getElementById('sidePreview');
+
+function updateCalc() {
+    const fob    = parseFloat(fobInput.value)  || 0;
+    const rate   = parseFloat(rateInput.value) || 0;
+    const result = fob * rate;
+    const formatted = result.toLocaleString('fr-DZ', { maximumFractionDigits: 0 });
+    if (calcValue)   calcValue.textContent  = formatted + ' DA';
+    if (sidePreview) sidePreview.textContent = formatted + ' DA';
+}
+
+if (fobInput)  fobInput.addEventListener('input', updateCalc);
+if (rateInput) rateInput.addEventListener('input', updateCalc);
+
+updateCalc();
+</script>
+{% endblock %}

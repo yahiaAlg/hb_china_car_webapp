@@ -1,0 +1,354 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block nav_sales %}active{% endblock %}
+
+{% block page_title %}{{ title }}{% endblock %}
+{% block page_sub_text %}{% if sale %}Modification de {{ sale.sale_number }}{% else %}Nouvelle transaction{% endif %}{% endblock %}
+
+{% block extra_css %}
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 20px;
+    align-items: start;
+}
+.card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-sm);
+}
+.card-head {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+}
+.card-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.card-body { padding: 20px; }
+
+/* ── Champs de formulaire ── */
+.field-group { margin-bottom: 18px; }
+.field-label {
+    display: block; font-size: 11px; font-weight: 600;
+    letter-spacing: .07em; text-transform: uppercase;
+    color: var(--text-muted); margin-bottom: 6px;
+}
+.field-input {
+    width: 100%;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 10px 13px;
+    min-height: 44px;
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+.field-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.field-input::placeholder { color: var(--text-muted); }
+select.field-input {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%239ca3af' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+}
+textarea.field-input { resize: vertical; min-height: 90px; }
+.field-error { font-size: 12px; color: #dc2626; margin-top: 5px; display:flex; align-items:center; gap:4px; }
+.field-help { font-size: 11.5px; color: var(--text-muted); margin-top: 5px; }
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+/* ── Aperçu de la marge ── */
+.margin-info {
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    margin-top: 12px;
+    display: none;
+}
+.margin-info.show { display: block; }
+.margin-info-row {
+    display: flex; justify-content: space-between;
+    font-size: 13px; padding: 5px 0;
+}
+.margin-info-row .lbl { color: var(--text-muted); }
+.margin-info-row .val { font-weight: 500; color: var(--text-primary); }
+
+@media (max-width: 1024px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .row-3 { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 600px) {
+    .row-2, .row-3 { grid-template-columns: 1fr; }
+}
+{% endblock %}
+
+{% block content %}
+
+<!-- Retour -->
+<div style="margin-bottom:20px;">
+    <a href="{% if sale %}{% url 'sales:detail' sale.pk %}{% else %}{% url 'sales:list' %}{% endif %}"
+       style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text-secondary);transition:color var(--transition);"
+       onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='var(--text-secondary)'">
+        <i class="bi bi-arrow-left"></i>
+        {% if sale %}Retour à {{ sale.sale_number }}{% else %}Retour aux ventes{% endif %}
+    </a>
+</div>
+
+<form method="post" id="saleForm">
+{% csrf_token %}
+
+<div class="form-grid">
+
+    <!-- GAUCHE : Champs principaux -->
+    <div>
+
+        <!-- Détails de la transaction -->
+        <div class="card">
+            <div class="card-head">
+                <div class="card-title"><i class="bi bi-receipt me-2" style="color:#d97706;"></i>Détails de la transaction</div>
+            </div>
+            <div class="card-body">
+                <div class="row-2">
+                    <div class="field-group">
+                        <label class="field-label">Date de vente</label>
+                        {{ form.sale_date }}
+                        {% if form.sale_date.errors %}<div class="field-error"><i class="bi bi-x-circle"></i>{{ form.sale_date.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Mode de paiement</label>
+                        {{ form.payment_method }}
+                        {% if form.payment_method.errors %}<div class="field-error"><i class="bi bi-x-circle"></i>{{ form.payment_method.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+                <div class="row-2">
+                    <div class="field-group">
+                        <label class="field-label">Véhicule</label>
+                        {{ form.vehicle }}
+                        {% if form.vehicle.errors %}<div class="field-error"><i class="bi bi-x-circle"></i>{{ form.vehicle.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Client</label>
+                        {{ form.customer }}
+                        {% if form.customer.errors %}<div class="field-error"><i class="bi bi-x-circle"></i>{{ form.customer.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+                <div class="row-3">
+                    <div class="field-group">
+                        <label class="field-label">Prix de vente (DA)</label>
+                        {{ form.sale_price }}
+                        {% if form.sale_price.errors %}<div class="field-error"><i class="bi bi-x-circle"></i>{{ form.sale_price.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Acompte (DA)</label>
+                        {{ form.down_payment }}
+                        {% if form.down_payment.errors %}<div class="field-error"><i class="bi bi-x-circle"></i>{{ form.down_payment.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Taux de commission (%)</label>
+                        {{ form.commission_rate }}
+                        {% if form.commission_rate.errors %}<div class="field-error"><i class="bi bi-x-circle"></i>{{ form.commission_rate.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <!-- Aperçu de la marge en temps réel -->
+                <div class="margin-info" id="marginInfo">
+                    <div style="font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);font-weight:600;margin-bottom:8px;">
+                        <i class="bi bi-piggy-bank me-1" style="color:#d97706;"></i> Aperçu de la marge
+                    </div>
+                    <div class="margin-info-row">
+                        <span class="lbl">Coût d'achat</span>
+                        <span class="val" id="mLandedCost">—</span>
+                    </div>
+                    <div class="margin-info-row">
+                        <span class="lbl">Prix de vente</span>
+                        <span class="val" id="mSalePrice">—</span>
+                    </div>
+                    <div class="margin-info-row" style="border-top:1px solid var(--border);margin-top:6px;padding-top:8px;">
+                        <span class="lbl">Marge brute</span>
+                        <span class="val" id="mMarginAmt" style="font-family:'Syne',sans-serif;font-weight:700;">—</span>
+                    </div>
+                    <div class="margin-info-row">
+                        <span class="lbl">Marge %</span>
+                        <span class="val" id="mMarginPct">—</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trader et notes -->
+        <div class="card">
+            <div class="card-head"><div class="card-title"><i class="bi bi-person-badge me-2" style="color:#7c3aed;"></i>Trader et notes</div></div>
+            <div class="card-body">
+                <div class="field-group">
+                    <label class="field-label">Trader assigné</label>
+                    {{ form.assigned_trader }}
+                    {% if form.assigned_trader.errors %}<div class="field-error"><i class="bi bi-x-circle"></i>{{ form.assigned_trader.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Notes</label>
+                    {{ form.notes }}
+                    {% if form.notes.errors %}<div class="field-error"><i class="bi bi-x-circle"></i>{{ form.notes.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Erreurs non liées aux champs -->
+        {% if form.non_field_errors %}
+        <div style="background:rgba(220,38,38,.07);border:1px solid rgba(220,38,38,.20);border-radius:var(--radius-md);padding:14px 16px;margin-bottom:18px;color:#dc2626;font-size:13px;">
+            <i class="bi bi-exclamation-circle me-2"></i>{{ form.non_field_errors.0 }}
+        </div>
+        {% endif %}
+
+        <!-- Boutons de soumission -->
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button type="submit" class="btn-primary" style="min-height:44px;">
+                <i class="bi bi-check-lg"></i>
+                {% if sale %}Enregistrer les modifications{% else %}Créer la vente{% endif %}
+            </button>
+            <a href="{% if sale %}{% url 'sales:detail' sale.pk %}{% else %}{% url 'sales:list' %}{% endif %}"
+               class="btn-ghost" style="min-height:44px;">
+                Annuler
+            </a>
+        </div>
+    </div>
+
+    <!-- DROITE : Panneau véhicule -->
+    <div>
+        <!-- Panneau dynamique véhicule -->
+        <div class="card" id="vehiclePanel" style="display:none;">
+            <div class="card-head">
+                <div class="card-title"><i class="bi bi-car-front-fill me-2" style="color:#0284c7;"></i>Informations véhicule</div>
+            </div>
+            <div class="card-body" id="vehiclePanelBody">
+                <!-- Rempli par JS -->
+            </div>
+        </div>
+
+        <!-- Aide -->
+        <div class="card">
+            <div class="card-head"><div class="card-title"><i class="bi bi-info-circle me-2" style="color:#0284c7;"></i>Aide</div></div>
+            <div class="card-body">
+                <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.75;">
+                    <p style="margin-bottom:10px;">
+                        <i class="bi bi-car-front me-1" style="color:var(--accent);"></i>
+                        Sélectionnez un véhicule pour afficher son coût d'achat et calculer la marge automatiquement.
+                    </p>
+                    <p style="margin-bottom:10px;">
+                        <i class="bi bi-percent me-1" style="color:#7c3aed;"></i>
+                        La commission est calculée sur la <strong style="color:var(--text-primary);">marge</strong>, et non sur le prix de vente.
+                    </p>
+                    <p style="margin:0;">
+                        <i class="bi bi-lock me-1" style="color:#dc2626;"></i>
+                        Une fois finalisée, une vente ne peut plus être modifiée.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/* Appliquer le style à tous les widgets Django */
+document.querySelectorAll('input:not([type="submit"]):not([type="hidden"]), select, textarea').forEach(el => {
+    el.classList.add('field-input');
+});
+
+const vehicleSelect = document.getElementById('id_vehicle');
+const salePriceInput = document.getElementById('id_sale_price');
+const marginInfo = document.getElementById('marginInfo');
+const vehiclePanel = document.getElementById('vehiclePanel');
+
+let currentLandedCost = null;
+
+function formatDA(val) {
+    return new Intl.NumberFormat('fr-DZ').format(Math.round(val)) + ' DA';
+}
+
+function fetchVehicleDetails(vehicleId) {
+    if (!vehicleId) {
+        vehiclePanel.style.display = 'none';
+        currentLandedCost = null;
+        updateMarginDisplay();
+        return;
+    }
+    fetch(`{% url 'sales:ajax_vehicle_details' %}?vehicle_id=${vehicleId}`)
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) return;
+            const v = data.vehicle;
+            currentLandedCost = v.landed_cost;
+            vehiclePanel.style.display = '';
+            document.getElementById('vehiclePanelBody').innerHTML = `
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+                    <div style="width:42px;height:42px;background:rgba(2,132,199,.10);border-radius:var(--radius-sm);display:grid;place-items:center;font-size:18px;color:#0284c7;">
+                        <i class="bi bi-car-front-fill"></i>
+                    </div>
+                    <div>
+                        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;color:var(--text-primary);">${v.make} ${v.model}</div>
+                        <div style="font-size:11.5px;color:var(--text-muted);">${v.year} · ${v.color || '—'}</div>
+                    </div>
+                </div>
+                <div style="background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;">
+                    <div style="font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:6px;">Coût d'achat</div>
+                    <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--text-primary);">${formatDA(v.landed_cost)}</div>
+                </div>
+                <div style="margin-top:10px;font-size:11.5px;color:var(--text-muted);">
+                    <i class="bi bi-building me-1"></i> Fournisseur : ${v.supplier}
+                </div>
+                <div style="font-size:11px;color:var(--text-muted);margin-top:3px;font-family:monospace;">NIV : ${v.vin_chassis}</div>
+            `;
+            updateMarginDisplay();
+        });
+}
+
+function updateMarginDisplay() {
+    const salePrice = parseFloat(salePriceInput.value);
+    if (!currentLandedCost || !salePrice) {
+        marginInfo.classList.remove('show');
+        return;
+    }
+    const margin = salePrice - currentLandedCost;
+    const pct = currentLandedCost > 0 ? (margin / currentLandedCost * 100) : 0;
+    const positiveColor = '#16a34a';
+    const negativeColor = '#dc2626';
+
+    document.getElementById('mLandedCost').textContent = formatDA(currentLandedCost);
+    document.getElementById('mSalePrice').textContent = formatDA(salePrice);
+
+    const amtEl = document.getElementById('mMarginAmt');
+    amtEl.textContent = formatDA(margin);
+    amtEl.style.color = margin >= 0 ? positiveColor : negativeColor;
+
+    const pctEl = document.getElementById('mMarginPct');
+    pctEl.textContent = pct.toFixed(1) + '%';
+    pctEl.style.color = pct >= 0 ? positiveColor : negativeColor;
+
+    marginInfo.classList.add('show');
+}
+
+if (vehicleSelect) {
+    vehicleSelect.addEventListener('change', () => fetchVehicleDetails(vehicleSelect.value));
+    if (vehicleSelect.value) fetchVehicleDetails(vehicleSelect.value);
+}
+
+if (salePriceInput) {
+    salePriceInput.addEventListener('input', updateMarginDisplay);
+}
+</script>
+{% endblock %}
