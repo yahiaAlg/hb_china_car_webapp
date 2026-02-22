@@ -53,6 +53,30 @@
     box-shadow: 0 0 0 3px var(--accent-glow);
 }
 textarea.field-input { resize: vertical; min-height: 90px; }
+input[type="date"].field-input,
+input[type="number"].field-input {
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
+}
+input[type="date"].field-input::-webkit-calendar-picker-indicator {
+    filter: invert(60%) sepia(0%) saturate(0%);
+    cursor: pointer;
+    opacity: 0.6;
+}
+input[type="date"].field-input::-webkit-inner-spin-button,
+input[type="number"].field-input::-webkit-inner-spin-button,
+input[type="number"].field-input::-webkit-outer-spin-button {
+    opacity: 0.4;
+}
+select.field-input {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%239ca3af' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+}
 .field-error { font-size: 12px; color: #dc2626; margin-top: 5px; display: flex; align-items: center; gap: 4px; }
 .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .info-row {
@@ -241,7 +265,7 @@ textarea.field-input { resize: vertical; min-height: 90px; }
 
 {% block extra_js %}
 <script>
-document.querySelectorAll('input:not([type="hidden"]), select, textarea').forEach(el => {
+document.querySelectorAll('input:not([type="hidden"]):not([type="submit"]), select, textarea').forEach(el => {
     el.classList.add('field-input');
 });
 

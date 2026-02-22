@@ -295,18 +295,19 @@
 
 {% block extra_js %}
 <script>
+function p(s){return parseFloat(String(s).replace(/[\u00a0\u0020]/g,"").replace(",","."))||0;}
 const ttCfg={backgroundColor:'#ffffff',borderColor:'rgba(0,0,0,.10)',borderWidth:1,titleColor:'#111827',bodyColor:'#6b7280',padding:10,cornerRadius:8};
 const palette=['#16a34a','#0284c7','#d97706','#7c3aed','#ea580c','#dc2626'];
 
 const statusLabels=[{% for s,d in status_breakdown.items %}"{{ s }}"{% if not forloop.last %},{% endif %}{% endfor %}];
-const statusCounts=[{% for s,d in status_breakdown.items %}{{ d.count }}{% if not forloop.last %},{% endif %}{% endfor %}];
-const statusValues=[{% for s,d in status_breakdown.items %}{{ d.value|floatformat:2 }}{% if not forloop.last %},{% endif %}{% endfor %}];
+const statusCounts=[{% for s,d in status_breakdown.items %}p("{{ d.count }}"){% if not forloop.last %},{% endif %}{% endfor %}];
+const statusValues=[{% for s,d in status_breakdown.items %}p("{{ d.value|floatformat:2 }}"){% if not forloop.last %},{% endif %}{% endfor %}];
 const ageLbls=[{% for k,v in age_breakdown.items %}"{{ k }}"{% if not forloop.last %},{% endif %}{% endfor %}];
-const ageCounts=[{% for k,v in age_breakdown.items %}{{ v.count }}{% if not forloop.last %},{% endif %}{% endfor %}];
-const ageValues=[{% for k,v in age_breakdown.items %}{{ v.value|floatformat:2 }}{% if not forloop.last %},{% endif %}{% endfor %}];
+const ageCounts=[{% for k,v in age_breakdown.items %}p("{{ v.count }}"){% if not forloop.last %},{% endif %}{% endfor %}];
+const ageValues=[{% for k,v in age_breakdown.items %}p("{{ v.value|floatformat:2 }}"){% if not forloop.last %},{% endif %}{% endfor %}];
 const suppLbls=[{% for s,d in supplier_breakdown.items %}"{{ s }}"{% if not forloop.last %},{% endif %}{% endfor %}];
-const suppCounts=[{% for s,d in supplier_breakdown.items %}{{ d.count }}{% if not forloop.last %},{% endif %}{% endfor %}];
-const suppValues=[{% for s,d in supplier_breakdown.items %}{{ d.value|floatformat:2 }}{% if not forloop.last %},{% endif %}{% endfor %}];
+const suppCounts=[{% for s,d in supplier_breakdown.items %}p("{{ d.count }}"){% if not forloop.last %},{% endif %}{% endfor %}];
+const suppValues=[{% for s,d in supplier_breakdown.items %}p("{{ d.value|floatformat:2 }}"){% if not forloop.last %},{% endif %}{% endfor %}];
 
 new Chart(document.getElementById('statusChart').getContext('2d'),{type:'doughnut',data:{labels:statusLabels,datasets:[{data:statusCounts,backgroundColor:palette.map(c=>c+'22'),borderColor:palette,borderWidth:2,hoverOffset:4}]},options:{cutout:'68%',responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#9ca3af',font:{size:10.5},padding:8,boxWidth:10,boxHeight:10}},tooltip:ttCfg}}});
 

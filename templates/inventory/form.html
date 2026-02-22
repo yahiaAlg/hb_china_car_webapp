@@ -177,7 +177,7 @@
                             <label class="field-label" for="{{ form.vehicle_purchase.id_for_label }}">
                                 Achat associé <span class="req">*</span>
                             </label>
-                            {{ form.vehicle_purchase }}
+                            {{ form.vehicle_purchase }} 
                             <div class="purchase-note"><i class="bi bi-exclamation-triangle"></i>Seuls les achats sans véhicule attribué sont listés.</div>
                             {% if form.vehicle_purchase.errors %}
                             <div class="field-error"><i class="bi bi-x-circle"></i> {{ form.vehicle_purchase.errors|join:", " }}</div>

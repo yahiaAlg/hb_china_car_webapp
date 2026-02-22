@@ -20,13 +20,30 @@ class VehicleForm(forms.ModelForm):
             "specifications",
             "vehicle_purchase",
         ]
-        widgets = {
-            "specifications": forms.Textarea(attrs={"rows": 4}),
-            "year": forms.NumberInput(),
-        }
+
+    widgets = {
+        "vin_chassis": forms.TextInput(attrs={"class": "form-input"}),
+        "make": forms.TextInput(attrs={"class": "form-input"}),
+        "model": forms.TextInput(attrs={"class": "form-input"}),
+        "year": forms.NumberInput(attrs={"class": "form-input"}),
+        "color": forms.TextInput(attrs={"class": "form-input"}),
+        "engine_type": forms.TextInput(attrs={"class": "form-input"}),
+        "specifications": forms.Textarea(attrs={"rows": 4, "class": "form-textarea"}),
+        "vehicle_purchase": forms.Select(attrs={"class": "form-select"}),
+    }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # Set classes directly on widget instances — guaranteed to apply
+        self.fields["vin_chassis"].widget.attrs["class"] = "form-input"
+        self.fields["make"].widget.attrs["class"] = "form-input"
+        self.fields["model"].widget.attrs["class"] = "form-input"
+        self.fields["year"].widget.attrs["class"] = "form-input"
+        self.fields["color"].widget.attrs["class"] = "form-input"
+        self.fields["engine_type"].widget.attrs["class"] = "form-input"
+        self.fields["specifications"].widget.attrs["class"] = "form-textarea"
+        self.fields["vehicle_purchase"].widget.attrs["class"] = "form-select"
         self.helper = FormHelper()
         self.helper.layout = Layout(
             "vin_chassis",
@@ -51,13 +68,14 @@ class VehicleForm(forms.ModelForm):
         )
 
         # Filter purchases to show only those without vehicles or current vehicle
+        # After
         if self.instance.pk:
             self.fields["vehicle_purchase"].queryset = Purchase.objects.filter(
-                Q(vehicle__isnull=True) | Q(vehicle=self.instance)
+                Q(vehicle_set__isnull=True) | Q(vehicle_set=self.instance)
             )
         else:
             self.fields["vehicle_purchase"].queryset = Purchase.objects.filter(
-                vehicle__isnull=True
+                vehicle_set__isnull=True
             )
 
 
@@ -122,10 +140,13 @@ class VehicleSearchForm(forms.Form):
 
 
 class VehiclePhotoForm(forms.ModelForm):
-
     class Meta:
         model = VehiclePhoto
         fields = ["photo", "caption", "is_primary"]
+        widgets = {
+            "photo": forms.ClearableFileInput(attrs={"class": "field-input"}),
+            "caption": forms.TextInput(attrs={"class": "field-input"}),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -148,15 +169,15 @@ class ReservationForm(forms.Form):
     ]
 
     duration_days = forms.ChoiceField(
-        choices=DURATION_CHOICES,
+        choices=[(3, "3 jours"), (7, "7 jours"), (14, "14 jours")],
         initial=7,
         label="Durée de réservation",
-        widget=forms.Select(attrs={"class": "form-control"}),
+        widget=forms.Select(attrs={"class": "field-select"}),
     )
 
     notes = forms.CharField(
         max_length=500,
         required=False,
         label="Notes",
-        widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+        widget=forms.Textarea(attrs={"class": "field-input", "rows": 3}),
     )

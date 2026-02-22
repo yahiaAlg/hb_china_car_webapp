@@ -329,23 +329,26 @@
 
 {% block extra_js %}
 <script>
-const _rev  = {{ total_revenue|floatformat:2 }};
-const _mar  = {{ total_margin|floatformat:2 }};
-const _comm = {{ total_commission|floatformat:2 }};
-const _net  = {{ net_profit|floatformat:2 }};
+function p(s){return parseFloat(String(s).replace(/[\u00a0\u0020]/g,"").replace(",","."))||0;}
+const _rev  = p("{{ total_revenue|floatformat:2 }}");
+const _mar  = p("{{ total_margin|floatformat:2 }}");
+const _comm = p("{{ total_commission|floatformat:2 }}");
+const _net  = p("{{ net_profit|floatformat:2 }}");
 function fPct(v){return _rev>0?Math.max(5,v/_rev*100).toFixed(1):'5';}
-document.getElementById('fBar1').style.width=fPct(_mar)+'%';
-document.getElementById('fBar2').style.width=fPct(_comm)+'%';
-document.getElementById('fBar3').style.width=fPct(_net)+'%';
-document.getElementById('fPct2').textContent=_rev>0?(_comm/_rev*100).toFixed(1)+'%':'0%';
-document.getElementById('fPct3').textContent=_rev>0?(_net/_rev*100).toFixed(1)+'%':'0%';
+(function(){
+  const b1=document.getElementById('fBar1'); if(b1)b1.style.width=fPct(_mar)+'%';
+  const b2=document.getElementById('fBar2'); if(b2)b2.style.width=fPct(_comm)+'%';
+  const b3=document.getElementById('fBar3'); if(b3)b3.style.width=fPct(_net)+'%';
+  const p2=document.getElementById('fPct2'); if(p2)p2.textContent=_rev>0?(_comm/_rev*100).toFixed(1)+'%':'0%';
+  const p3=document.getElementById('fPct3'); if(p3)p3.textContent=_rev>0?(_net/_rev*100).toFixed(1)+'%':'0%';
+})();
 
 const ttCfg={backgroundColor:'#ffffff',borderColor:'rgba(0,0,0,.10)',borderWidth:1,titleColor:'#111827',bodyColor:'#6b7280',padding:10,cornerRadius:8};
 
 {% if grouped_data %}
 const _cd={{ chart_grouped_data|safe }};
 const labels=_cd.labels, revenues=_cd.revenues, margins=_cd.margins;
-const mpcts=[{% for r in grouped_data %}{{ r.margin_percentage|floatformat:2 }}{% if not forloop.last %},{% endif %}{% endfor %}];
+const mpcts=[{% for r in grouped_data %}p("{{ r.margin_percentage|floatformat:2 }}"){% if not forloop.last %},{% endif %}{% endfor %}];
 
 /* CA + Marge */
 const ctx=document.getElementById('profitChart').getContext('2d');
@@ -371,12 +374,15 @@ new Chart(pctCtx,{type:'bar',data:{labels,datasets:[{label:'Taux de marge (%)',d
 
 /* Top véhicules */
 const vLbls=[{% for v in top_vehicles %}"{{ v.vehicle }}"{% if not forloop.last %},{% endif %}{% endfor %}];
-const vMars=[{% for v in top_vehicles %}{{ v.margin|floatformat:2 }}{% if not forloop.last %},{% endif %}{% endfor %}];
+const vMars=[{% for v in top_vehicles %}p("{{ v.margin|floatformat:2 }}"){% if not forloop.last %},{% endif %}{% endfor %}];
 const pal=['#d97706','#0284c7','#16a34a','#7c3aed','#ea580c','#0d9488','#db2777','#4f46e5'];
-new Chart(document.getElementById('vehicleMarginChart').getContext('2d'),{type:'bar',data:{labels:vLbls,datasets:[{label:'Marge totale (DA)',data:vMars,
-  backgroundColor:pal.map(c=>c+'22'),borderColor:pal,borderWidth:1.5,borderRadius:6,borderSkipped:false}]},
-  options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
-    plugins:{legend:{display:false},tooltip:{...ttCfg,callbacks:{label:c=>' '+Number(c.parsed.x).toLocaleString('fr-FR')+' DA'}}},
-    scales:{x:{grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#9ca3af',font:{size:10.5},callback:v=>(v/1000000).toFixed(1)+'M'}},y:{grid:{display:false},ticks:{color:'#6b7280',font:{size:10.5}}}}}});
+(function(){
+  const el=document.getElementById('vehicleMarginChart'); if(!el)return;
+  new Chart(el.getContext('2d'),{type:'bar',data:{labels:vLbls,datasets:[{label:'Marge totale (DA)',data:vMars,
+    backgroundColor:pal.map(c=>c+'22'),borderColor:pal,borderWidth:1.5,borderRadius:6,borderSkipped:false}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...ttCfg,callbacks:{label:c=>' '+Number(c.parsed.x).toLocaleString('fr-FR')+' DA'}}},
+      scales:{x:{grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#9ca3af',font:{size:10.5},callback:v=>(v/1000000).toFixed(1)+'M'}},y:{grid:{display:false},ticks:{color:'#6b7280',font:{size:10.5}}}}}});
+})();
 </script>
 {% endblock %}
